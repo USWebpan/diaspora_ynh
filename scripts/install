@@ -140,8 +140,8 @@ ynh_script_progression --message="Creating a PostgreSQL database..."
 
 
 db_name=$(ynh_sanitize_dbid --db_name="${app}_production")
-db_user=$db_name
-db_pwd="abcd1234"
+db_user=$(ynh_sanitize_dbid --db_name=$app)
+db_pwd=$(ynh_string_random --length=30)
 
 ynh_app_setting_set --app=$app --key=db_name --value=$db_name
 ynh_app_setting_set --app=$app --key=db_user --value=$db_user
@@ -237,7 +237,8 @@ chown $app:$app "$diaspora_toml"
 #=================================================
 ynh_script_progression --message="Configuring a systemd service..." --time --weight=1
 
-ynh_add_systemd_config --service="$app-web" --template="diaspora-web.service"
+ynh_add_systemd_config --service="$app-web" --template="$app-web.service"
+ynh_add_systemd_config --service="$app-sidekiq" --template="$app-sidekiq.service"
 
 #=================================================
 # INSTALLING DIASPORA
@@ -279,7 +280,8 @@ ynh_use_logrotate
 #=================================================
 ynh_script_progression --message="Integrating service in YunoHost..." --time --weight=1
 
-# yunohost service add "$app-web" --description="$app web service"
+yunohost service add "$app-web" --description="$app web service"
+yunohost service add "$app-sidekiq" --description="$app sidekiq service"
 
 #=================================================
 # START SYSTEMD SERVICE
@@ -287,7 +289,7 @@ ynh_script_progression --message="Integrating service in YunoHost..." --time --w
 ynh_script_progression --message="Starting a systemd service..." --time --weight=1
 
 ynh_systemd_action --service_name=${app}-web --action="start" --log_path=systemd --line_match="Listening on"
-
+ynh_systemd_action --service_name=${app}-sidekiq --action="start" --log_path=systemd --line_match="Schedules Loaded"
 
 #=================================================
 # SETUP SSOWAT
