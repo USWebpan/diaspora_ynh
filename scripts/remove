@@ -24,8 +24,7 @@ db_user=$(ynh_app_setting_get --app=$app --key=db_user)
 
 final_path=$(ynh_app_setting_get --app=$app --key=final_path)
 datadir=$(ynh_app_setting_get --app=$app --key=datadir)
-echo "Hello"
-echo $db_user
+
 #=================================================
 # STANDARD REMOVE
 #=================================================
@@ -53,7 +52,7 @@ ynh_remove_systemd_config --service="$app-web"
 
 ynh_script_progression --message="Removing the $db_user PostgreSQL database.."
 
-# ynh_psql_remove_db --db_user=$db_user --db_name=$db_name
+ynh_psql_remove_db --db_user=$db_user --db_name=$db_name
 
 #=================================================
 # REMOVE DEPENDENCIES
@@ -61,7 +60,7 @@ ynh_script_progression --message="Removing the $db_user PostgreSQL database.."
 ynh_script_progression --message="Removing dependencies..." --time --weight=1
 
 # Remove metapackage and its dependencies
-# ynh_remove_ruby
+ynh_remove_ruby
 # ynh_remove_app_dependencies
 
 #=================================================

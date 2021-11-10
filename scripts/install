@@ -27,7 +27,7 @@ ynh_abort_if_errors
 domain=$YNH_APP_ARG_DOMAIN
 path_url=$YNH_APP_ARG_PATH
 admin=$YNH_APP_ARG_ADMIN
-# is_public=$YNH_APP_ARG_IS_PUBLIC
+is_public=$YNH_APP_ARG_IS_PUBLIC
 # language=$YNH_APP_ARG_LANGUAGE
 # password=$YNH_APP_ARG_PASSWORD
 
@@ -129,7 +129,6 @@ ynh_script_progression --message="Creating a PostgreSQL database..."
 # Create PostgreSQL database
 # db_name=$(ynh_sanitize_dbid --db_name="${app}_production")
 # db_user=$(ynh_sanitize_dbid --db_name=$app)
-# db_pwd="paradox123"
 # ynh_app_setting_set --app=$app --key=db_name --value=$db_name
 # ynh_app_setting_set --app=$app --key=db_pwd --value=$db_pwd
 # ynh_app_setting_set --app=$app --key=db_user --value=$db_user
@@ -140,10 +139,12 @@ ynh_script_progression --message="Creating a PostgreSQL database..."
 
 
 
-db_name=$(ynh_sanitize_dbid --db_name=$app)
+db_name=$(ynh_sanitize_dbid --db_name="${app}_production")
 db_user=$db_name
-db_pwd=$(ynh_string_random)
+db_pwd="abcd1234"
+
 ynh_app_setting_set --app=$app --key=db_name --value=$db_name
+ynh_app_setting_set --app=$app --key=db_user --value=$db_user
 ynh_app_setting_set --app=$app --key=db_pwd --value=$db_pwd
 ynh_psql_test_if_first_run
 ynh_psql_setup_db --db_user=$db_user --db_name=$db_name --db_pwd=$db_pwd
@@ -209,7 +210,7 @@ ynh_script_progression --message="Adding a configuration file..." --time --weigh
 
 database_yml="$final_path/config/database.yml"
 diaspora_toml="$final_path/config/diaspora.toml"
-language="$(echo $language | head -c 2)"
+# language="$(echo $language | head -c 2)"
 
 redis_namespace=${app}_production
 ynh_app_setting_set --app="$app" --key=redis_namespace --value="$redis_namespace"
@@ -244,17 +245,8 @@ ynh_add_systemd_config --service="$app-web" --template="diaspora-web.service"
 ynh_script_progression --message="Installing diaspora..."
 
 pushd "$final_path"
-	# exec_login_as $app bin/bundle --path 'vendor/bundle'
-	# exec_login_as $app bin/bundle config set with 'development'
-	# exec_login_as $app MAKEFLAGS=-j2 bin/bundle install --jobs 2
 	exec_login_as $app script/configure_bundler
 	exec_login_as $app bin/bundle install --full-index
-	# sudo -u $app $ynh_ruby_load_path bin/bundle config deployment 'true'
-	# sudo -u $app $ynh_ruby_load_path bin/bundle config without 'development test'
-	# sudo -u $app $ynh_ruby_load_path bin/bundle install
-	# echo "SAFETY_ASSURED=1">> $config
-	# sudo -u $app RAILS_ENV=production $ynh_ruby_load_path bin/bundle exec rails db:setup --quiet
-	# sudo -u $app RAILS_ENV=production $ynh_ruby_load_path bin/bundle exec rails assets:precompile --quiet
 popd
 
 ynh_script_progression --message="Preparing the database..."
@@ -294,7 +286,7 @@ ynh_script_progression --message="Integrating service in YunoHost..." --time --w
 #=================================================
 ynh_script_progression --message="Starting a systemd service..." --time --weight=1
 
-# ynh_systemd_action --service_name=${app}-web --action="start" --log_path=systemd --line_match="Listening on"
+ynh_systemd_action --service_name=${app}-web --action="start" --log_path=systemd --line_match="Listening on"
 
 
 #=================================================
